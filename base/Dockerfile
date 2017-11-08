@@ -1,4 +1,4 @@
-FROM buildpack-deps:jessie
+FROM node:6
 
 # make Apt non-interactive
 # RUN echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/90circleci \
@@ -24,11 +24,6 @@ RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 RUN locale-gen C.UTF-8 || true
 ENV LANG=C.UTF-8
 
-# Install Nodejs
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash \
-  && apt-get install -y nodejs
-# End Install Nodejs
-
 # Install Protoc
 ################
 RUN set -ex \
@@ -44,8 +39,6 @@ RUN set -ex \
   && cd \
   && rm -rf /tmp/protobufs/ \
 
-# Install Docker
-
 # Use unicode
 RUN locale-gen C.UTF-8 || true
 ENV LANG=C.UTF-8
@@ -55,25 +48,7 @@ RUN JQ_URL=$(curl --location --fail --retry 3 https://api.github.com/repos/stedo
   && curl --silent --show-error --location --fail --retry 3 --output /usr/bin/jq $JQ_URL \
   && chmod +x /usr/bin/jq
 
-# Docker.com returns the URL of the latest binary when you hit a directory listing
-# We curl this URL and `grep` the version out.
-# The output looks like this:
-
-#>    # To install, run the following commands as root:
-#>    curl -fsSLO https://get.docker.com/builds/Linux/x86_64/docker-17.05.0-ce.tgz && tar --strip-components=1 -xvzf docker-17.05.0-ce.tgz -C /usr/local/bin
-#>
-#>    # Then start docker in daemon mode:
-#>    /usr/local/bin/dockerd
-
-RUN set -ex \
-  && export DOCKER_VERSION=$(curl --silent --fail --retry 3 https://get.docker.com/builds/  | grep -P -o 'docker-\d+\.\d+\.\d+-ce\.tgz' | head -n 1) \
-  && DOCKER_URL="https://get.docker.com/builds/Linux/x86_64/${DOCKER_VERSION}" \
-  && echo Docker URL: $DOCKER_URL \
-  && curl --silent --show-error --location --fail --retry 3 --output /tmp/docker.tgz "${DOCKER_URL}" \
-  && ls -lha /tmp/docker.tgz \
-  && tar -xz -C /tmp -f /tmp/docker.tgz \
-  && mv /tmp/docker/* /usr/bin \
-  && rm -rf /tmp/docker /tmp/docker.tgz
+RUN curl https://get.docker.com/ | sh
 
 # docker compose
 RUN COMPOSE_URL=$(curl --location --fail --retry 3 https://api.github.com/repos/docker/compose/releases/latest | jq -r '.assets[] | select(.name == "docker-compose-Linux-x86_64") | .browser_download_url') \
@@ -88,11 +63,6 @@ RUN DOCKERIZE_URL=$(curl --location --fail --retry 3 https://api.github.com/repo
 
 WORKDIR /opt
 
-# RUN wget https://github.com/google/protobuf/releases/download/v3.3.0/protoc-3.3.0-linux-x86_32.zip \
-#   && unzip protoc-3.3.0-linux-x86_32.zip \
-#   && rm protoc-3.3.0-linux-x86_32.zip \
-# ENV PATH /opt/protoc-3.3.0-linux-x86_32/bin:$PATH
-
 # install gcloud sdk
 ENV CLOUDSDK_PYTHON_SITEPACKAGES 1
 RUN wget http://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.zip && unzip google-cloud-sdk.zip && rm google-cloud-sdk.zip
@@ -100,6 +70,6 @@ RUN google-cloud-sdk/install.sh --path-update=true --bash-completion=true --rc-p
 
 RUN sed -i -- 's/\"disable_updater\": false/\"disable_updater\": true/g' /opt/google-cloud-sdk/lib/googlecloudsdk/core/config.json
 
-RUN npm install -g grpc istanbul
+RUN npm install -g grpc@1.6.6 istanbul
 RUN mkdir ${HOME}/.ssh
 ENV PATH /opt/google-cloud-sdk/bin:$PATH
