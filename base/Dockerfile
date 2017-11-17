@@ -1,4 +1,4 @@
-FROM node:6
+FROM node:8
 
 # make Apt non-interactive
 # RUN echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/90circleci \
@@ -70,6 +70,7 @@ RUN google-cloud-sdk/install.sh --path-update=true --bash-completion=true --rc-p
 
 RUN sed -i -- 's/\"disable_updater\": false/\"disable_updater\": true/g' /opt/google-cloud-sdk/lib/googlecloudsdk/core/config.json
 
-RUN npm install -g grpc@1.6.6 istanbul
+RUN npm install -g istanbul
+RUN npm install -g grpc@1.6.6 --unsafe
 RUN mkdir ${HOME}/.ssh
 ENV PATH /opt/google-cloud-sdk/bin:$PATH
