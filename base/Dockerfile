@@ -26,18 +26,14 @@ ENV LANG=C.UTF-8
 
 # Install Protoc
 ################
-RUN set -ex \
+RUN wget https://github.com/google/protobuf/releases/download/v3.5.1/protoc-3.5.1-linux-x86_64.zip \
+  && unzip protoc-3.5.1-linux-x86_64.zip \
+  && rm protoc-3.5.1-linux-x86_64.zip \
+  && chmod +x ./bin/protoc \
+  && mv /tmp/bin/protoc /usr/local/bin \
+  && mv /tmp/include/google /usr/local/include/
 
-  && mkdir -p /tmp/protobufs \
-  && cd /tmp/protobufs \
-  && git clone https://github.com/google/protobuf.git \
-  && cd protobuf \
-  && ./autogen.sh \
-  && ./configure --prefix=/usr \
-  && make \
-  && make install \
-  && cd \
-  && rm -rf /tmp/protobufs/ \
+RUN protoc --version
 
 # Use unicode
 RUN locale-gen C.UTF-8 || true
@@ -70,7 +66,5 @@ RUN google-cloud-sdk/install.sh --path-update=true --bash-completion=true --rc-p
 
 RUN sed -i -- 's/\"disable_updater\": false/\"disable_updater\": true/g' /opt/google-cloud-sdk/lib/googlecloudsdk/core/config.json
 
-RUN npm install -g istanbul
-RUN npm install -g grpc@1.6.6 --unsafe
 RUN mkdir ${HOME}/.ssh
 ENV PATH /opt/google-cloud-sdk/bin:$PATH
