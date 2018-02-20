@@ -25,7 +25,7 @@ RUN locale-gen C.UTF-8 || true
 ENV LANG=C.UTF-8
 
 # Install Nodejs
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash \
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash \
   && apt-get install -y nodejs
 # End Install Nodejs
 
