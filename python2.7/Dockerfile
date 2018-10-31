@@ -72,6 +72,11 @@ RUN set -ex; \
 		\) -exec rm -rf '{}' +; \
 	rm -f get-pip.py
 
+RUN pip install envtpl && \
+    wget https://github.com/garethr/kubeval/releases/download/0.7.3/kubeval-linux-amd64.tar.gz && \
+    tar xf kubeval-linux-amd64.tar.gz && rm -rf kubeval-linux-amd64.tar.gz && \
+    mv kubeval /usr/local/bin
+
 # install google cloud sdk
 ARG CLOUD_SDK_VERSION=223.0.0
 ENV CLOUD_SDK_VERSION=$CLOUD_SDK_VERSION
